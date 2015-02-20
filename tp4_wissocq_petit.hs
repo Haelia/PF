@@ -3,6 +3,8 @@ import Test.QuickCheck
 data Arbre coul val = Feuille  
                     | Noeud coul val (Arbre coul val) (Arbre coul val)
                     deriving Show
+data Couleur = Rouge 
+             | Noir
 
 monArbre = Noeud 0 1 ( Noeud 0 2 (Noeud 0 3 Feuille Feuille) (Noeud 0 4 Feuille (Noeud 0 5 Feuille Feuille))) (Noeud 0 2 Feuille Feuille) 
 
@@ -67,13 +69,29 @@ colorToString c = "[color=" ++ c ++ ", fontcolor=" ++ c ++"]"
 --valToString :: Char -> String
 valToString x = x : " "
 
-valNoeud :: Noeud c a n1 n2 -> a
-valNoeud (Noeud _ a _ _) = a
+valNoeud :: Arbre c a -> a
+valNoeud (Noeud _ a _ _ )= a
 
 arcs :: Arbre c a -> [(a,a)]
 arcs Feuille                      = []
 arcs (Noeud _ _ Feuille Feuille)  = []
 arcs (Noeud _ a e1 e2)            = (a, valNoeud e1) : (a, valNoeud e2) : ((arcs e1) ++ (arcs e2))
+
+arc :: (a -> String) -> (a,a) -> String
+arc f (x,y) = f x ++ " -> " ++ f y
+
+dotise :: String -> (c -> String) -> (a -> String) -> Arbre c a -> String
+dotise name fc fv a = unlines (("diagraph \"" ++ name ++ "\" {\n node [fontname=\"DejaVu-Sans\", shape=circle]\n") : (map (noeud fc fv) (aplatit a)) ++ (map (arc fv) (arcs a)) ++ ["}"])  
+
+elementR :: Ord a => a -> Arbre c a -> Bool
+elementR _ Feuille = False 
+elementR x (Noeud _ a e1 e2) | x == a    = True
+                             | x < a     = elementR x e1
+                             | otherwise = elementR x e2 
+
+equilibre :: Arbre c a -> Arbre c a
+equilibre Feuille           = Feuille
+equilibre (Noeud c v a1 a2) = 
 
 --Propriétés
 --Propriété vérifiant si la hauteur du peigne gauche est bien celle de la liste qu'on a passé en paramètre
